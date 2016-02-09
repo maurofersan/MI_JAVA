@@ -28,6 +28,16 @@ public final class MyMath {
     }
 
     public static boolean primo(int n) {
-        return false;
+        int contador=0;
+        for (int i = 1; i < n + 1; i++) {
+            if(n % i == 0){
+                contador++;
+            }
+        }
+        if(contador != 2){
+            return false;
+        }else{
+            return true;
+        }    
     }
 }
