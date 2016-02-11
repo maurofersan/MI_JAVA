@@ -13,7 +13,6 @@ public class VentaController {
     }
     
     public ItemDto[] procesar(String tipo , double total){
-        //TODO faltaaa...................................
-        return null;
+        return CompFactory.obtenerComp(tipo).procesar(total);
     }
 }

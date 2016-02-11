@@ -5,6 +5,9 @@
  */
 package pe.mauro.ventaapp.view;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import pe.mauro.ventaapp.controller.VentaController;
 import pe.mauro.ventaapp.dto.ItemDto;
@@ -40,6 +43,7 @@ public class VentaView extends javax.swing.JFrame {
         btnProcesar = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         tbnTabla = new javax.swing.JTable();
+        lblTexto = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -58,16 +62,17 @@ public class VentaView extends javax.swing.JFrame {
 
         tbnTabla.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null}
+
             },
             new String [] {
                 "CONCEPTO", "VALOR"
             }
         ));
         jScrollPane1.setViewportView(tbnTabla);
+
+        lblTexto.setBackground(new java.awt.Color(0, 0, 0));
+        lblTexto.setForeground(new java.awt.Color(255, 255, 255));
+        lblTexto.setText("jLabel3");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -90,7 +95,9 @@ public class VentaView extends javax.swing.JFrame {
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 375, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(lblTexto, javax.swing.GroupLayout.PREFERRED_SIZE, 367, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 375, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(0, 36, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -111,27 +118,56 @@ public class VentaView extends javax.swing.JFrame {
                     .addComponent(txtTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(30, 30, 30)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 256, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(lblTexto)
+                .addContainerGap(61, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnProcesarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProcesarActionPerformed
-        
-        double total = Double.parseDouble(txtTotal.getText());
-        String tipo = cboTipo.getSelectedItem().toString();
-        //proceso
-        ItemDto[] data = control.procesar(tipo, total);
-        //Mostrar tabla
-        DefaultTableModel tabla;
-        tabla =(DefaultTableModel) tbnTabla.getModel();
-        tabla.setRowCount(0);
-        for (ItemDto dto : data) {
-            Object[] rowData = {dto.getConcepto(), dto.getValor()};
-            tabla.addRow(rowData);
+        String texto ="";
+        try {
+            //Inicio
+            texto = "Inicio" + getHora();
+            lblTexto.setText(texto);
+            //Datos
+            double total = Double.parseDouble(txtTotal.getText());
+            String tipo = cboTipo.getSelectedItem().toString();
+            //Verificar importe
+            if(total <= 0.0){
+                throw new Exception("Importe debe ser mayor que cero.");
+            }
+            //proceso
+            ItemDto[] data = control.procesar(tipo, total);
+            //Mostrar tabla
+            DefaultTableModel tabla;
+            tabla = (DefaultTableModel) tbnTabla.getModel();
+            tabla.setRowCount(0);
+            for (ItemDto dto : data) {
+                Object[] rowData = {dto.getConcepto(), dto.getValor()};
+                tabla.addRow(rowData);
+            }
+            cboTipo.setSelectedIndex(-1);
+            txtTotal.setText("");
+        } catch (NumberFormatException numberFormatException) {
+            JOptionPane.showMessageDialog(rootPane, "El total debe ser numerico", "ERROR", 
+                                            JOptionPane.ERROR_MESSAGE);
+        } catch(NullPointerException e){
+            JOptionPane.showMessageDialog(rootPane, "Debe seleccionar un tipo de documento", "ERROR",
+                                        JOptionPane.ERROR_MESSAGE);
+         } catch(Exception e){
+             String msg = "Error en el proceso.";
+             if(e.getMessage() != null && !e.getMessage().isEmpty()){
+                 msg += "\n" + e.getMessage();
+             }
+              JOptionPane.showMessageDialog(rootPane, msg, "ERROR", 
+                                            JOptionPane.ERROR_MESSAGE);
+        } finally {
+            texto += " Final: " + getHora();
+            lblTexto.setText(texto);
         }
-        
     }//GEN-LAST:event_btnProcesarActionPerformed
 
     /**
@@ -175,11 +211,22 @@ public class VentaView extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblTexto;
     private javax.swing.JTable tbnTabla;
     private javax.swing.JTextField txtTotal;
     // End of variables declaration//GEN-END:variables
 
     private void llenarCombo() {
         cboTipo.removeAllItems();
+        for(String tipo: control.obtenerTipos()){
+            cboTipo.addItem(tipo);
+        }
+        cboTipo.setSelectedIndex(-1);
+    }
+
+    private String getHora() {
+       Date ahora = new Date();
+        SimpleDateFormat formateador = new SimpleDateFormat("hh:mm:ss.SSSS");
+       return formateador.format(ahora);
     }
 }
